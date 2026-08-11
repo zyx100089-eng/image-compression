@@ -39,7 +39,7 @@ with a fair size/quality comparison against real JPEG (PIL).
 - `verify.py` - DCT orthogonality, Huffman prefix-freeness + entropy
   bound, codec bit-exactness vs the reference pipeline, PSNR
   monotonicity, colour round trips, benchmark sanity
-- `test_codec.py` - pytest unit suite (27 tests)
+- `test_codec.py` - pytest unit suite (29 tests)
 - `demo.py` - the story (energy compaction, zero-coefficient counts,
   JPEG comparison, colour); saves images to `out/`
 
