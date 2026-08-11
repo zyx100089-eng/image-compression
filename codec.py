@@ -276,7 +276,8 @@ def decode_image(data: bytes) -> tuple[np.ndarray, float]:
     Returns (image, quality).  The image is cropped back to the
     original size recorded in the header.
     """
-    assert data[:4] == b"MCJP", "not an MCJP file"
+    if data[:4] != b"MCJP":
+        raise ValueError("not an MCJP file")
     w, h, quality, n_channels = struct.unpack(">IIBB", data[4:14])
     pos = 14
 
@@ -337,7 +338,11 @@ def _rle_ac(ac: np.ndarray, syms: list[int], amps: list[int]) -> None:
 
 def _unrle_ac(sym_iter, bit_iter) -> np.ndarray:
     """Decode one block's (run,size) symbols + amplitude bits to 63
-    values.  Reads from the shared symbol iterator until EOB."""
+    values.  Reads from the shared symbol iterator until EOB.
+
+    A malformed stream whose run+size overruns the 63 AC coefficients
+    is rejected with ValueError rather than silently truncated — a
+    corrupt file should fail loudly, not produce a wrong block."""
     vals = np.zeros(63, dtype=np.int64)
     idx = 0
     for sym in sym_iter:
@@ -346,13 +351,15 @@ def _unrle_ac(sym_iter, bit_iter) -> np.ndarray:
         run, size = divmod(sym, 16)
         if size == 0:  # ZRL: 16 zeros
             idx += 16
+            if idx > 63:
+                raise ValueError("malformed AC stream: ZRL overruns block")
             continue
         bits = 0
         for _ in range(size):
             bits = (bits << 1) | next(bit_iter)
         idx += run
         if idx >= 63:
-            break
+            raise ValueError("malformed AC stream: run overruns block")
         vals[idx] = _value_from_bits(bits, size)
         idx += 1
     return vals

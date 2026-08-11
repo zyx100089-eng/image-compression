@@ -182,7 +182,8 @@ difference 0.0 for every tested size and quality.
 SSIM = (2μₓμᵧ + c₁)(2σₓᵧ + c₂) / ((μₓ² + μᵧ² + c₁)(σₓ² + σᵧ² + c₂))
 ```
 
-Implemented with separable convolutions from scratch.
+Implemented with a Gaussian window via direct 2D convolution
+(O(N·k²) per image; fine at 256×256).
 
 ---
 
@@ -223,8 +224,8 @@ small coefficients) and its 30 years of tuning.
 - Zig-zag: O(64) per block via a precomputed index map.
 - Overall: the codec is **linear in the number of pixels**, with a
   small constant — a 256×256 image encodes in milliseconds.
-- SSIM: O(W·H·k²) with window size k = 11 (separable convs make it
-  O(W·H·k)).
+- SSIM: O(W·H·k²) with window size k = 11 (direct 2D convolution;
+  a separable version would be O(W·H·k) but is not implemented).
 
 ---
 

@@ -19,9 +19,10 @@ The project's central claims, each verified by its test suite:
   DCT→quantise→IDCT pipeline to machine precision, across sizes and
   qualities.
 - On a smooth 8×8 block, the **top 4 of 64 DCT coefficients hold
-  ~100% of the energy**; at quality 50, **94% of coefficients
-  quantise to zero** — the two facts that make the whole pipeline
-  work.
+  ~100% of the energy**; on the demo image at quality 50, **94% of
+  coefficients quantise to zero** (82% on the noisy benchmark image —
+  the figure is image-dependent) — the two facts that make the whole
+  pipeline work.
 - At typical qualities (20–75) the from-scratch codec **matches or
   beats PIL's real JPEG in PSNR at equal file size**, on both
   grayscale and colour images.

@@ -189,8 +189,20 @@ class TestCodec:
             decode_image(data[:20])
 
     def test_corrupt_magic_raises(self):
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             decode_image(b"XXXX" + b"\x00" * 32)
+
+    def test_malformed_ac_stream_raises(self):
+        # A (run,size) symbol that overruns the 63 AC coefficients must
+        # raise, not silently truncate.  Build a stream whose first
+        # symbol claims a run that exceeds the block.
+        from codec import _unrle_ac
+        # sym = run*16 + size; run=60, size=1 -> idx lands at 60, then
+        # idx += 1 -> 61, next symbol run=5 -> 66 >= 63 -> raise
+        syms = iter([60 * 16 + 1, 5 * 16 + 1, 0])
+        bits = iter([1, 1])
+        with pytest.raises(ValueError):
+            _unrle_ac(syms, bits)
 
 
 # ----------------------------------------------------------------------
@@ -232,3 +244,29 @@ class TestMetrics:
         blurred = np.ones((64, 64))
         blurred[16:48, 16:48] = 128
         assert ssim(a, noise) > ssim(a, blurred)
+
+    def test_ssim_matches_scipy_reference(self):
+        # Independent cross-check against scipy's gaussian_filter path
+        # (a completely different implementation than the manual conv).
+        from scipy.ndimage import gaussian_filter
+
+        def ssim_ref(x, y, window_size=11, sigma=1.5):
+            L = 255.0
+            c1 = (0.01 * L) ** 2
+            c2 = (0.03 * L) ** 2
+            trunc = window_size / (2 * sigma)
+            mu_x = gaussian_filter(x, sigma, truncate=trunc)
+            mu_y = gaussian_filter(y, sigma, truncate=trunc)
+            mu_x2, mu_y2, mu_xy = mu_x ** 2, mu_y ** 2, mu_x * mu_y
+            sx2 = gaussian_filter(x * x, sigma, truncate=trunc) - mu_x2
+            sy2 = gaussian_filter(y * y, sigma, truncate=trunc) - mu_y2
+            sxy = gaussian_filter(x * y, sigma, truncate=trunc) - mu_xy
+            num = (2 * mu_xy + c1) * (2 * sxy + c2)
+            den = (mu_x2 + mu_y2 + c1) * (sx2 + sy2 + c2)
+            return float(np.mean(num / den))
+
+        rng = np.random.default_rng(42)
+        for _ in range(3):
+            a = rng.integers(0, 256, (64, 64)).astype(float)
+            b = a + rng.normal(0, 15, a.shape)
+            assert abs(ssim(a, b) - ssim_ref(a, b)) < 0.001

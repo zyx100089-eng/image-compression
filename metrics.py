@@ -10,7 +10,8 @@ structure over sliding windows:
                 / ((mu_x^2 + mu_y^2 + c1)(sigma_x^2 + sigma_y^2 + c2))
 
 with c1 = (k1 L)^2, c2 = (k2 L)^2, L = 255, k1 = 0.01, k2 = 0.03.
-Implemented with a Gaussian window via separable convolutions.
+Implemented with a Gaussian window via direct 2D convolution
+(O(N·k²) per image; fine at 256×256).
 """
 
 from __future__ import annotations
@@ -30,23 +31,6 @@ def _gaussian_kernel(size: int = 11, sigma: float = 1.5) -> np.ndarray:
     x = np.arange(size) - size // 2
     k = np.exp(-(x ** 2) / (2 * sigma ** 2))
     return k / k.sum()
-
-
-def _conv2d_separable(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:
-    """Separable 2D convolution (kernel outer product applied in two
-    passes), 'same' size with edge-reflection padding.
-
-    Convolving along rows then along columns of a padded image and
-    cropping back to the original shape is exactly the 2D convolution
-    with the outer-product kernel - but costs O(N*k) instead of
-    O(N*k^2)."""
-    pad = len(kernel) // 2
-    padded = np.pad(img, pad, mode="edge")
-    tmp = np.apply_along_axis(lambda m: np.convolve(m, kernel, mode="same"),
-                              1, padded)
-    out = np.apply_along_axis(lambda m: np.convolve(m, kernel, mode="same"),
-                              0, tmp)
-    return out[pad:-pad, pad:-pad]
 
 
 def _conv2d(img: np.ndarray, kernel: np.ndarray) -> np.ndarray:

@@ -74,7 +74,15 @@ Colour (YCbCr 4:2:0):
 
 At typical qualities the from-scratch codec matches or beats PIL's
 JPEG in PSNR at equal file size (PIL wins at q=95 where its optimized
-entropy coder shines). 94% of coefficients quantise to zero at q=50.
+entropy coder shines). On the demo image, 94% of coefficients
+quantise to zero at q=50 (82% on the noisy benchmark image — the
+figure is image-dependent).
+
+**Fair-comparison caveat:** the codec stores per-image adaptive
+Huffman tables, while PIL's JPEG is called with libjpeg's fixed
+standard tables (no `optimize=True`). The adaptive tables are part of
+the codec's design, but a fully optimised JPEG would close part of the
+gap at high quality.
 
 ## References
 
