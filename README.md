@@ -1,41 +1,42 @@
 # JPEG-Style Image Codec
 
-A from-scratch JPEG-style image codec: 8x8 DCT-II, quantisation, zig-zag ordering, run-length encoding, canonical Huffman coding, and YCbCr 4:2:0 colour, packaged into a bit-level file format. The codec is benchmarked against PIL's JPEG at matched file sizes.
+A JPEG encoder/decoder written from scratch in Python: 8×8 DCT-II,
+quantisation, zig-zag, run-length encoding, canonical Huffman coding,
+and YCbCr 4:2:0 colour — packaged into my own bit-level file format
+(MCJP). Then benchmarked against PIL's JPEG at matched file sizes.
 
-## Background
+JPEG is everywhere and its pipeline is well documented, but I'd never
+seen anyone implement it end-to-end. That was the draw: every stage —
+the DCT as a matrix product, the quantisation tables, the bitstream —
+is something you can hold in your hand. This is what that looks like.
 
-JPEG is the dominant lossy image format, and its pipeline is well documented but rarely implemented. This project implements the full pipeline in Python without relying on image codecs: the DCT is computed as a matrix product, the Huffman tables are built from the image's own frequency distribution, and the bitstream is written by hand. The goal is to understand each stage — transform, quantisation, entropy coding — and to measure how the result compares against a production implementation.
+## The one result I'd defend first
 
-## Pipeline
+**The Huffman coder sits within 1 bit of the Shannon entropy bound.**
+For a fixed code, the average code length can't go below the entropy
+of the source; my measured average length is within 1 bit of that
+lower bound, verified in the test suite alongside prefix-freeness and
+DCT orthogonality. That's the deepest result in the project and it's
+easy to miss, so it lives here, not buried in a table.
 
-The codec (`codec.py`) processes an image in the following stages:
+## The pipeline
 
-1. Split into 8x8 blocks.
-2. Apply the 2D DCT-II (matrix form) to each block.
-3. Quantise coefficients using JPEG luma/chroma tables with scaling.
+1. Split the image into 8×8 blocks.
+2. 2D DCT-II (matrix form) on each block — `dct.py`.
+3. Quantise using JPEG luma/chroma tables with scaling — `quant.py`.
 4. Zig-zag order the quantised coefficients.
-5. Encode runs as (run, size) symbols with raw amplitude bits, with EOB/ZRL handling.
-6. Huffman-encode the symbol stream (canonical codes) into a bitstream (MCJP format).
+5. Encode runs as (run, size) symbols with raw amplitude bits, with
+   EOB/ZRL handling.
+6. Huffman-encode the symbol stream with canonical codes into the MCJP
+   bitstream — `huffman.py`, `codec.py`.
 
-Colour images are converted RGB → YCbCr (BT.601) with 4:2:0 chroma subsampling. Quality metrics (PSNR, SSIM with Gaussian windows, per-channel for colour) are implemented from scratch in `metrics.py`.
+Colour images go RGB → YCbCr (BT.601) with 4:2:0 chroma subsampling.
+PSNR and SSIM (Gaussian windows, per-channel for colour) are
+implemented from scratch in `metrics.py`.
 
-The Huffman coding is near-optimal variable-length coding: the measured average length is within 1 bit of the Shannon lower bound, verified in the test suite alongside prefix-freeness and DCT orthogonality.
+## Results: does it beat PIL?
 
-## Files
-
-| File | Purpose |
-|---|---|
-| `dct.py` | 8x8 2D DCT-II (matrix form) and IDCT |
-| `quant.py` | Quantisation tables (JPEG luma + chroma, scaling), zig-zag order |
-| `huffman.py` | Huffman: frequency table → canonical codes, decode tree, entropy/average-length helpers |
-| `codec.py` | Full pipeline: image → blocks → DCT → quant → zig-zag → RLE → Huffman → bitstream (MCJP format); grayscale (H,W) or colour (H,W,3) |
-| `metrics.py` | PSNR and SSIM from scratch |
-| `benchmark.py` | Rate-distortion comparison vs PIL's JPEG at matching quality |
-| `verify.py` | DCT orthogonality, Huffman prefix-freeness + entropy bound, codec bit-exactness, PSNR monotonicity, colour round trips, benchmark sanity |
-| `test_codec.py` | Unit test suite (29 tests) |
-| `demo.py` | Demonstration of the full pipeline; saves images to `out/` |
-
-## Results (256x256 test images)
+Rate-distortion on 256×256 test images, mine vs PIL at matched quality:
 
 Grayscale:
 
@@ -55,20 +56,72 @@ Colour (YCbCr 4:2:0):
 |      75 |     2088 | 43.1 dB   | 2105     | 42.0 dB   |
 |      95 |     2389 | 44.5 dB   | 3846     | 46.8 dB   |
 
-At typical quality levels the codec matches or exceeds PIL's JPEG in PSNR at equal file size; PIL wins at q=95, where its optimised entropy coder is stronger. On the demo image, 94% of coefficients quantise to zero at q=50 (82% on the noisy benchmark image).
+At typical quality levels my codec matches or exceeds PIL's JPEG in
+PSNR at equal file size; PIL wins at q=95, where libjpeg's optimised
+entropy coder is stronger.
 
-**Fair-comparison caveat:** the codec stores per-image adaptive Huffman tables, while PIL's JPEG uses libjpeg's fixed standard tables (no `optimize=True`). The adaptive tables are part of the codec's design, but a fully optimised JPEG would close part of the gap at high quality.
+**The fair-comparison caveat, stated plainly:** my codec stores
+per-image adaptive Huffman tables; PIL's JPEG uses libjpeg's fixed
+standard tables (no `optimize=True`). The adaptive tables are part of
+my design — but they're an advantage the comparison gives me, and a
+fully-optimised JPEG would close part of the gap at high quality. The
+"matches or beats PIL" headline should be read with that in mind.
+
+## What's verified
+
+- DCT orthogonality (DCT ∘ IDCT == identity to float precision)
+- Huffman prefix-freeness and the Shannon-bound check
+- Codec bit-exactness: encode → decode round-trips are exact for
+  grayscale and colour at all qualities tested
+- PSNR monotonicity: higher quality setting never lowers PSNR
+- 29 unit tests + `verify.py` for the full suite
+
+## Files
+
+| File | Purpose |
+|---|---|
+| `dct.py` | 8×8 2D DCT-II (matrix form) and IDCT |
+| `quant.py` | Quantisation tables (luma + chroma, scaling), zig-zag order |
+| `huffman.py` | Frequency table → canonical codes, decode tree, entropy/average-length helpers |
+| `codec.py` | Full pipeline: image → blocks → DCT → quant → zig-zag → RLE → Huffman → MCJP bitstream; grayscale (H,W) or colour (H,W,3) |
+| `metrics.py` | PSNR and SSIM from scratch |
+| `benchmark.py` | Rate-distortion comparison vs PIL's JPEG at matching quality |
+| `verify.py` | DCT orthogonality, Huffman prefix-freeness + entropy bound, bit-exactness, PSNR monotonicity, colour round trips, benchmark sanity |
+| `test_codec.py` | 29 unit tests |
+| `demo.py` | Full pipeline demo; saves images to `out/` |
 
 ## Running
 
 ```
 python3 -m pytest test_codec.py -q   # unit tests
-python3 verify.py   # full verification
-python3 benchmark.py  # rate-distortion vs JPEG
-python3 demo.py       # demonstration
+python3 verify.py                    # full verification
+python3 benchmark.py                 # rate-distortion vs JPEG
+python3 demo.py                      # demonstration
 ```
+
+## Limitations, honestly
+
+- **No progressive encoding, no chroma subsampling options beyond
+  4:2:0.** This is a baseline JPEG, not a production codec.
+- **Slow on large images.** Pure-Python bit packing is the bottleneck;
+  a 1024×1024 image takes seconds.
+- **My Huffman tables are per-image.** That's the design choice that
+  makes the compression competitive — and the fair-comparison caveat
+  above.
+- **The demo images are small (256×256).** The results are consistent
+  with PIL's behaviour on natural images, but I didn't run a photo
+  corpus.
+
+## What I'd do next
+
+- Progressive JPEG (DC/AC spectral selection) — the natural extension.
+- A real corpus benchmark (a few hundred photographs) instead of two
+  test images.
+- Arithmetic coding, to see how far past the Huffman Shannon bound a
+  from-scratch implementation can push.
 
 ## References
 
 - Wallace, *The JPEG Still Picture Compression Standard* (IEEE, 1992)
-- Wang, Bovik, Sheikh, Simoncelli, *Image Quality Assessment: From Error Visibility to Structural Similarity* (IEEE TIP, 2004)
+- Wang, Bovik, Sheikh, Simoncelli, *Image Quality Assessment: From
+  Error Visibility to Structural Similarity* (IEEE TIP, 2004)

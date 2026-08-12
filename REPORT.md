@@ -1,8 +1,6 @@
 # Image Compression from Scratch: a JPEG-style Codec
 
-*A report for admissions — written as if for a short undergraduate project write-up.*
-
----
+*Project write-up.*
 
 ## Summary
 
