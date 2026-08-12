@@ -68,13 +68,6 @@ python3 benchmark.py  # rate-distortion vs JPEG
 python3 demo.py       # demonstration
 ```
 
-## What I Learned
-
-- DCT-II is preferred over the DFT for images because the even-reflection extension avoids boundary discontinuities, which concentrates energy in far fewer coefficients.
-- Quantisation is where most of the compression happens; the entropy coder is near-optimal but accounts for a smaller share of the savings.
-- Zig-zag ordering matters: it groups large runs of zeros before the entropy stage.
-- Comparing fairly against a production codec requires controlling for configuration differences (here, fixed vs adaptive Huffman tables) — otherwise the comparison measures the wrong thing.
-
 ## References
 
 - Wallace, *The JPEG Still Picture Compression Standard* (IEEE, 1992)
