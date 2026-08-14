@@ -67,6 +67,25 @@ my design — but they're an advantage the comparison gives me, and a
 fully-optimised JPEG would close part of the gap at high quality. The
 "matches or beats PIL" headline should be read with that in mind.
 
+### Real-photo corpus
+
+The tables above are synthetic test images. `corpus_benchmark.py`
+runs the same comparison on five real photographs (astronaut, coffee,
+rocket, cat, Hubble deep field — scikit-image's bundled dataset,
+downscaled to 256×256), with results in `results/corpus_benchmark.csv`:
+
+| quality | mine (mean PSNR) | JPEG (mean PSNR) |
+|--------:|-----------------:|-----------------:|
+|      20 | 30.0 dB          | 28.1 dB          |
+|      50 | 31.3 dB          | 30.6 dB          |
+|      75 | 32.6 dB          | 32.4 dB          |
+|      95 | 33.3 dB          | 37.0 dB          |
+
+The pattern holds on real photographs: my codec wins or ties at
+typical qualities (20–75) and loses at q=95, where libjpeg's
+optimised entropy coder dominates. The same caveat applies — the
+adaptive Huffman tables are part of my design.
+
 ## What's verified
 
 - DCT orthogonality (DCT ∘ IDCT == identity to float precision)
@@ -86,6 +105,7 @@ fully-optimised JPEG would close part of the gap at high quality. The
 | `codec.py` | Full pipeline: image → blocks → DCT → quant → zig-zag → RLE → Huffman → MCJP bitstream; grayscale (H,W) or colour (H,W,3) |
 | `metrics.py` | PSNR and SSIM from scratch |
 | `benchmark.py` | Rate-distortion comparison vs PIL's JPEG at matching quality |
+| `corpus_benchmark.py` | Same comparison on 5 real photographs (scikit-image dataset) |
 | `verify.py` | DCT orthogonality, Huffman prefix-freeness + entropy bound, bit-exactness, PSNR monotonicity, colour round trips, benchmark sanity |
 | `test_codec.py` | 29 unit tests |
 | `demo.py` | Full pipeline demo; saves images to `out/` |
@@ -96,6 +116,7 @@ fully-optimised JPEG would close part of the gap at high quality. The
 python3 -m pytest test_codec.py -q   # unit tests
 python3 verify.py                    # full verification
 python3 benchmark.py                 # rate-distortion vs JPEG
+python3 corpus_benchmark.py          # real-photo corpus benchmark
 python3 demo.py                      # demonstration
 ```
 
