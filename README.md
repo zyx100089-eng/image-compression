@@ -1,5 +1,9 @@
 # JPEG-Style Image Codec
 
+[![Tests](https://github.com/zyx100089-eng/image-compression/actions/workflows/tests.yml/badge.svg)](https://github.com/zyx100089-eng/image-compression/actions/workflows/tests.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 A JPEG encoder/decoder written from scratch in Python: 8×8 DCT-II,
 quantisation, zig-zag, run-length encoding, canonical Huffman coding,
 and YCbCr 4:2:0 colour — packaged into my own bit-level file format
