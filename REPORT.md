@@ -123,16 +123,18 @@ make the decoder auditable.
 
 | q | mine (B) | mine PSNR | JPEG (B) | JPEG PSNR |
 |---|---------:|----------:|---------:|----------:|
-| 20 | 2344 | 42.5 dB | 2340 | 39.5 dB |
-| 50 | 3079 | 45.4 dB | 3608 | 44.6 dB |
-| 75 | 3903 | 48.4 dB | 4875 | 48.4 dB |
-| 95 | 4363 | 50.3 dB | 10637 | 51.9 dB |
+| 20 | 2345 | 42.5 dB | 2340 | 39.5 dB |
+| 50 | 3080 | 45.4 dB | 3608 | 44.6 dB |
+| 75 | 3904 | 48.4 dB | 4875 | 48.4 dB |
+| 95 | 4364 | 50.3 dB | 10637 | 51.9 dB |
 
 At q ≤ 75 the from-scratch codec matches or beats libjpeg in PSNR at
 equal or smaller file size; at q = 95 libjpeg's optimized entropy coder
 wins the PSNR race (51.9 vs 50.3 dB) but needs 2.4× the bytes.
 
 ### 4.2 Colour vs PIL's JPEG
+
+128×128 synthetic colour image (smooth gradients in all three channels):
 
 | q | mine (B) | mine PSNR | JPEG (B) | JPEG PSNR |
 |---|---------:|----------:|---------:|----------:|

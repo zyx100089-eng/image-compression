@@ -40,18 +40,19 @@ implemented from scratch in `metrics.py`.
 
 ## Results: does it beat PIL?
 
-Rate-distortion on 256×256 test images, mine vs PIL at matched quality:
+Rate-distortion on the demo images (`demo.py`), mine vs PIL at
+matched quality:
 
-Grayscale:
+Grayscale (256×256):
 
 | quality | mine (B) | mine PSNR | JPEG (B) | JPEG PSNR |
 |--------:|---------:|----------:|---------:|----------:|
-|      20 |     2344 | 42.5 dB   | 2340     | 39.5 dB   |
-|      50 |     3079 | 45.4 dB   | 3608     | 44.6 dB   |
-|      75 |     3903 | 48.4 dB   | 4875     | 48.4 dB   |
-|      95 |     4363 | 50.3 dB   | 10637    | 51.9 dB   |
+|      20 |     2345 | 42.5 dB   | 2340     | 39.5 dB   |
+|      50 |     3080 | 45.4 dB   | 3608     | 44.6 dB   |
+|      75 |     3904 | 48.4 dB   | 4875     | 48.4 dB   |
+|      95 |     4364 | 50.3 dB   | 10637    | 51.9 dB   |
 
-Colour (YCbCr 4:2:0):
+Colour (YCbCr 4:2:0, 128×128):
 
 | quality | mine (B) | mine PSNR | JPEG (B) | JPEG PSNR |
 |--------:|---------:|----------:|---------:|----------:|
