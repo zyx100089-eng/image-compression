@@ -7,7 +7,8 @@
 A JPEG encoder/decoder written from scratch in Python: 8×8 DCT-II,
 quantisation, zig-zag, run-length encoding, canonical Huffman coding,
 and YCbCr 4:2:0 colour — packaged into my own bit-level file format
-(MCJP). Then benchmarked against PIL's JPEG at matched file sizes.
+(MCJP). Then benchmarked honestly against PIL's JPEG at matched file
+sizes.
 
 JPEG is everywhere and its pipeline is well documented, but I'd never
 seen anyone implement it end-to-end. That was the draw: every stage —
@@ -38,7 +39,7 @@ Colour images go RGB → YCbCr (BT.601) with 4:2:0 chroma subsampling.
 PSNR and SSIM (Gaussian windows, per-channel for colour) are
 implemented from scratch in `metrics.py`.
 
-## Results: does it beat PIL?
+## Does it beat PIL?
 
 Rate-distortion on the demo images (`demo.py`), mine vs PIL at
 matched quality:
@@ -125,7 +126,7 @@ python3 corpus_benchmark.py          # real-photo corpus benchmark
 python3 demo.py                      # demonstration
 ```
 
-## Limitations, honestly
+## What I didn't do
 
 - **No progressive encoding, no chroma subsampling options beyond
   4:2:0.** This is a baseline JPEG, not a production codec.
@@ -134,9 +135,9 @@ python3 demo.py                      # demonstration
 - **My Huffman tables are per-image.** That's the design choice that
   makes the compression competitive — and the fair-comparison caveat
   above.
-- **The demo images are small (256×256).** The results are consistent
-  with PIL's behaviour on natural images, but I didn't run a photo
-  corpus.
+- **The demo images are small.** The results are consistent with
+  PIL's behaviour on natural images, but the corpus is five photos,
+  not hundreds.
 
 ## What I'd do next
 
