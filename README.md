@@ -1,19 +1,18 @@
 # JPEG-Style Image Codec
 
 [![Tests](https://github.com/zyx100089-eng/image-compression/actions/workflows/tests.yml/badge.svg)](https://github.com/zyx100089-eng/image-compression/actions/workflows/tests.yml)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-A JPEG encoder/decoder written from scratch in Python: 8×8 DCT-II,
-quantisation, zig-zag, run-length encoding, canonical Huffman coding,
-and YCbCr 4:2:0 colour — packaged into my own bit-level file format
-(MCJP). Then benchmarked honestly against PIL's JPEG at matched file
-sizes.
+This repo is a JPEG encoder/decoder I wrote from scratch in Python:
+8×8 DCT-II, quantisation, zig-zag, run-length encoding, canonical
+Huffman coding, and YCbCr 4:2:0 colour, all packed into a bit-level
+file format of my own (MCJP). At the end I benchmarked it, honestly,
+against PIL's JPEG at matched file sizes.
 
-JPEG is everywhere and its pipeline is well documented, but I'd never
-seen anyone implement it end-to-end. That was the draw: every stage —
-the DCT as a matrix product, the quantisation tables, the bitstream —
-is something you can hold in your hand. This is what that looks like.
+Why rebuild something JPEG already does? The pipeline is documented
+in pieces, but I'd never watched one implementation run all of it
+end-to-end. Every stage — the DCT as a matrix product, the
+quantisation tables, the bitstream — is small enough to hold in your
+hand. So I held it.
 
 ## The one result I'd defend first
 
@@ -92,7 +91,7 @@ typical qualities (20–75) and loses at q=95, where libjpeg's
 optimised entropy coder dominates. The same caveat applies — the
 adaptive Huffman tables are part of my design.
 
-## What's verified
+## Checks
 
 - DCT orthogonality (DCT ∘ IDCT == identity to float precision)
 - Huffman prefix-freeness and the Shannon-bound check
@@ -126,7 +125,9 @@ python3 corpus_benchmark.py          # real-photo corpus benchmark
 python3 demo.py                      # demonstration
 ```
 
-## What I didn't do
+## Limits and next steps
+
+Where this codec stops:
 
 - **No progressive encoding, no chroma subsampling options beyond
   4:2:0.** This is a baseline JPEG, not a production codec.
@@ -139,7 +140,7 @@ python3 demo.py                      # demonstration
   PIL's behaviour on natural images, but the corpus is five photos,
   not hundreds.
 
-## What I'd do next
+Where it could go from here:
 
 - Progressive JPEG (DC/AC spectral selection) — the natural extension.
 - A real corpus benchmark (a few hundred photographs) instead of two
